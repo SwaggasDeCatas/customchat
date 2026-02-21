@@ -10,17 +10,17 @@ local MarketplaceService = game:GetService("MarketplaceService")
 local HttpService = game:GetService("HttpService")
 
 local function loadPlayerConfig()
-    local url = "https://raw.githubusercontent.com/SwaggasDeCatas/customchat/refs/heads/main/main/PlayerConfigs.lua"
-    local success, result = pcall(function()
-        return loadstring(game:HttpGet(url))()
-    end)
-    
-    if success then
-        return result
-    else
-        warn("Failed to load player config:", result)
-        return {}
-    end
+	local url = "https://raw.githubusercontent.com/SwaggasDeCatas/customchat/refs/heads/main/main/PlayerConfigs.lua"
+	local success, result = pcall(function()
+		return loadstring(game:HttpGet(url))()
+	end)
+
+	if success then
+		return result
+	else
+		warn("Failed to load player config:", result)
+		return {}
+	end
 end
 
 local playerConfigs = loadPlayerConfig()
@@ -56,17 +56,17 @@ end
 -- CELEBRATION FOLDER & MARKER TEMPLATE
 -------------------------------------------------
 local function loadCelebrationUI()
-    local url = "https://raw.githubusercontent.com/SwaggasDeCatas/customchat/refs/heads/main/main/UI.lua"
-    local success, module = pcall(function()
-        return loadstring(game:HttpGet(url))()
-    end)
-    
-    if success and module then
-        return module
-    else
-        warn("Failed to load CelebrationUI module:", module)
-        return nil
-    end
+	local url = "https://raw.githubusercontent.com/SwaggasDeCatas/customchat/refs/heads/main/main/UI.lua"
+	local success, module = pcall(function()
+		return loadstring(game:HttpGet(url))()
+	end)
+
+	if success and module then
+		return module
+	else
+		warn("Failed to load CelebrationUI module:", module)
+		return nil
+	end
 end
 
 local CelebrationUI = loadCelebrationUI()
@@ -77,6 +77,7 @@ local markerTemplate = CelebrationUI.CreateMarkerTemplate(player)
 
 -- GUI setup
 local guiRefs = CelebrationUI.CreateGUI(player)
+local GUI = guiRefs.GUI
 local mainFrame = guiRefs.MainFrame
 local scroll = guiRefs.Scroll
 local chatBox = guiRefs.ChatBox
@@ -92,13 +93,13 @@ minimizeBtn.MouseButton1Click:Connect(function()
 		scroll.Visible = false
 		chatBox.Visible = false
 		mainFrame.BackgroundTransparency = 1
-		UiStroke.Transparency = 1
+		mainFrame.UIStroke.Transparency = 1
 		minimizeBtn.Text = "+"
 	else
 		scroll.Visible = true
 		chatBox.Visible = true
 		mainFrame.BackgroundTransparency = 0.2
-		UiStroke.Transparency = 0
+		mainFrame.UIStroke.Transparency = 0
 		minimizeBtn.Text = "-"
 	end
 end)
@@ -196,6 +197,9 @@ local function addMessage(plr, text)
 	-------------------------------------------------
 	-- IMAGE MESSAGE CHECK
 	-------------------------------------------------
+	-------------------------------------------------
+	-- IMAGE MESSAGE CHECK (styled like normal messages)
+	-------------------------------------------------
 	local assetId = string.match(text, "rbxassetid://(%d+)")
 	if assetId then
 		local success, info = pcall(function()
@@ -203,40 +207,62 @@ local function addMessage(plr, text)
 		end)
 
 		if success and info and info.AssetTypeId then
-			-- AssetTypeId 1 = Image, 13 = Decal (varies but safe check)
-			if info.AssetTypeId == 1 or info.AssetTypeId == 13 then
+			if info.AssetTypeId == 1 or info.AssetTypeId == 13 then -- Image / Decal
 
-				local container = Instance.new("Frame")
-				container.BackgroundTransparency = 1
-				container.Size = UDim2.new(1,0,0,200)
-				container.LayoutOrder = #messages + 1
-				container.Parent = scroll
+				local config = playerConfigs[plr.UserId]
+				local isContinuation = (lastSender == plr)
 
-				-- Image
-				local image = Instance.new("ImageLabel")
-				image.BackgroundTransparency = 1
-				image.Size = UDim2.new(1,0,0.9,0)
-				image.Position = UDim2.new(0,0,0,0)
-				image.Image = "rbxassetid://" .. assetId
-				image.ScaleType = Enum.ScaleType.Fit
-				image.Parent = container
+				-- Frame size bigger for images
+				local frameHeight = isContinuation and 200 or 240
 
-				-- Player Name
-				local nameLabel = Instance.new("TextLabel")
-				nameLabel.BackgroundTransparency = 1
-				nameLabel.Size = UDim2.new(1,0,0.1,0)
-				nameLabel.Position = UDim2.new(0,0,0.9,0)
-				nameLabel.TextScaled = true
-				nameLabel.TextWrapped = true
-				nameLabel.TextColor3 = getPlayerColor(plr)
-				nameLabel.Font = Enum.Font.Montserrat
-				nameLabel.Text = "[" .. plr.Name .. "]"
-				nameLabel.Parent = container
+				local frame = Instance.new("Frame")
+				frame.BackgroundTransparency = 1
+				frame.LayoutOrder = #messages + 1
+				frame.Size = UDim2.new(0.95, 0, 0, frameHeight)
+				frame.Parent = scroll
 
-				table.insert(messages, container)
+				if not isContinuation then
+					-- Player headshot image
+					local imageLabel = Instance.new("ImageLabel")
+					imageLabel.Size = UDim2.new(0.1, 0, 0.2, 0)
+					imageLabel.BackgroundTransparency = 1
+					imageLabel.ScaleType = Enum.ScaleType.Fit
+					imageLabel.Image = config and config.PFP or string.format("rbxthumb://type=AvatarHeadShot&id=%s&w=420&h=420", plr.UserId)
+					imageLabel.Parent = frame
 
+					local uicorner = Instance.new("UICorner")
+					uicorner.CornerRadius = UDim.new(1, 0)
+					uicorner.Parent = imageLabel
+
+					-- Player name label
+					local nameLabel = Instance.new("TextLabel")
+					nameLabel.BackgroundTransparency = 1
+					nameLabel.Position = UDim2.new(0.11, 0, 0, 0)
+					nameLabel.Size = UDim2.new(0.9, 0, 0.1, 0)
+					nameLabel.TextScaled = true
+					nameLabel.TextWrapped = true
+					nameLabel.Font = Enum.Font.Montserrat
+					nameLabel.FontFace.Weight = Enum.FontWeight.SemiBold
+					nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+					nameLabel.TextColor3 = plr and getPlayerColor(plr) or Color3.fromRGB(255,255,255)
+					nameLabel.Text = config and (config.Username .. " (@"..plr.Name..")") or plr.Name
+					nameLabel.Parent = frame
+				end
+
+				-- Image message label
+				local imgLabel = Instance.new("ImageLabel")
+				imgLabel.BackgroundTransparency = 1
+				imgLabel.Position = isContinuation and UDim2.new(0.11, 0, 0, 0) or UDim2.new(0.11, 0, 0.1, 0)
+				imgLabel.Size = isContinuation and UDim2.new(0.9, 0, 1, 0) or UDim2.new(0.9, 0, 0.9, 0)
+				imgLabel.Image = "rbxassetid://" .. assetId
+				imgLabel.ScaleType = Enum.ScaleType.Fit
+				imgLabel.Parent = frame
+
+				table.insert(messages, frame)
+
+				-- Remove oldest message if over MAX_MESSAGES
 				if #messages > MAX_MESSAGES then
-					local oldest = table.remove(messages,1)
+					local oldest = table.remove(messages, 1)
 					if oldest then oldest:Destroy() end
 				end
 
@@ -246,6 +272,7 @@ local function addMessage(plr, text)
 					scroll.CanvasPosition = Vector2.new(0, math.max(0, canvasHeight - viewHeight))
 				end)
 
+				lastSender = plr
 				return
 			end
 		end
@@ -286,10 +313,11 @@ local function addMessage(plr, text)
 		nameLabel.Size = UDim2.new(0.9, 0, 0.4, 0)
 		nameLabel.TextScaled = true
 		nameLabel.TextWrapped = true
-		nameLabel.Font = Enum.Font.Montserrat
+		nameLabel.Font = Enum.Font.MontserratMedium
 		nameLabel.FontFace.Weight = Enum.FontWeight.SemiBold
 		nameLabel.TextXAlignment = Enum.TextXAlignment.Left
-		nameLabel.TextColor3 = plr and getPlayerColor(plr) or Color3.fromRGB(255,255,255)
+		--nameLabel.TextColor3 = plr and getPlayerColor(plr) or Color3.fromRGB(255,255,255)
+		nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 		nameLabel.Text = config and config.Username or plr.Name
 		nameLabel.Parent = frame
 	end
@@ -304,7 +332,7 @@ local function addMessage(plr, text)
 	messageLabel.Font = Enum.Font.Montserrat
 	messageLabel.FontFace.Weight = Enum.FontWeight.Regular
 	messageLabel.TextXAlignment = Enum.TextXAlignment.Left
-	messageLabel.TextColor3 = Color3.fromRGB(255,255,255)
+	messageLabel.TextColor3 = Color3.fromRGB(225,225,225)
 	messageLabel.Text = text
 	messageLabel.Parent = frame
 
