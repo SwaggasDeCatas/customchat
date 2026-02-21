@@ -71,7 +71,7 @@ function CelebrationUI.CreateGUI(player)
     local mainFrame = Instance.new("Frame")
     mainFrame.Size = UDim2.new(0.3,0,0.25,0)
     mainFrame.Position = UDim2.new(0.7,0,0.3,0)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(33, 33, 33)
     mainFrame.BackgroundTransparency = 0.2
     mainFrame.BorderSizePixel = 0
     mainFrame.Active = true
@@ -84,7 +84,7 @@ function CelebrationUI.CreateGUI(player)
     uiCorner.Parent = mainFrame
 
     local uiStroke = Instance.new("UIStroke")
-    uiStroke.Color = Color3.fromRGB(255,255,255)
+    uiStroke.Color = Color3.fromRGB(90, 90, 90)
     uiStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     uiStroke.Transparency = 0
     uiStroke.Parent = mainFrame
@@ -117,6 +117,7 @@ function CelebrationUI.CreateGUI(player)
     scroll.BackgroundTransparency = 1
     scroll.ScrollBarImageColor3 = Color3.fromRGB(255,255,255)
     scroll.ScrollBarThickness = 5
+    minimizeBtn.BorderSizePixel = 1
 
     local uiList = Instance.new("UIListLayout")
     uiList.Parent = scroll
@@ -136,9 +137,19 @@ function CelebrationUI.CreateGUI(player)
     chatBox.TextScaled = true
     chatBox.TextColor3 = Color3.fromRGB(255,255,255)
     chatBox.BackgroundTransparency = 0.2
-    chatBox.BackgroundColor3 = Color3.fromRGB(30,30,30)
-    chatBox.Font = Enum.Font.Montserrat
+    chatBox.BackgroundColor3 = Color3.fromRGB(65, 65, 65)
+    chatBox.Font = Enum.Font.MontserratBold
     chatBox.Visible = true
+
+    local uiCorner2 = Instance.new("UICorner")
+    uiCorner2.CornerRadius = UDim.new(0,3)
+    uiCorner2.Parent = chatBox
+
+    local uiStroke2 = Instance.new("UIStroke")
+    uiStroke2.Color = Color3.fromRGB(90, 90, 90)
+    uiStroke2.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    uiStroke2.Transparency = 0
+    uiStroke2.Parent = chatbox
 
     -- Minimize button
     local minimizeBtn = Instance.new("TextButton")
