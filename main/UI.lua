@@ -34,7 +34,7 @@ function CelebrationUI.CreateMarkerTemplate(player)
         arrow.Image = "http://www.roblox.com/asset/?id=260958688"
         arrow.Size = UDim2.new(0.4,0,0.4,0)
         arrow.Position = UDim2.new(0.3,0,0.3,0)
-        arrow.Rotation = 180
+       -- arrow.Rotation = 180
         arrow.BackgroundTransparency = 1
         arrow.Parent = bill
 
