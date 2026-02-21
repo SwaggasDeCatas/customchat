@@ -55,174 +55,35 @@ end
 -------------------------------------------------
 -- CELEBRATION FOLDER & MARKER TEMPLATE
 -------------------------------------------------
-local folder = ReplicatedStorage:FindFirstChild("CelebrationGuiAssets")
-if not folder then
-	folder = Instance.new("Folder")
-	folder.Name = "CelebrationGuiAssets"
-	folder.Parent = ReplicatedStorage
+local function loadCelebrationUI()
+    local url = "https://raw.githubusercontent.com/SwaggasDeCatas/customchat/refs/heads/main/main/UI.lua"
+    local success, module = pcall(function()
+        return loadstring(game:HttpGet(url))()
+    end)
+    
+    if success and module then
+        return module
+    else
+        warn("Failed to load CelebrationUI module:", module)
+        return nil
+    end
 end
 
--- Make the marker template
-local markerTemplate = folder:FindFirstChild("Marker")
-if not markerTemplate then
-	markerTemplate = Instance.new("Part")
-	markerTemplate.Name = "Marker"
-	markerTemplate.Size = Vector3.new(0.1,0.1,0.1)
-	markerTemplate.Anchored = true
-	markerTemplate.CanCollide = false
-	markerTemplate.Transparency = 1
-	markerTemplate.Parent = folder
+local CelebrationUI = loadCelebrationUI()
+if not CelebrationUI then return end
 
-	local bill = Instance.new("BillboardGui")
-	bill.Name = "Billboard"
-	bill.Size = UDim2.new(8,5,8,5)
-	bill.ZIndexBehavior = Enum.ZIndexBehavior.Global
-	bill.SizeOffset = Vector2.new(0,0.5)
-	bill.Parent = markerTemplate
+-- Marker template
+local markerTemplate = CelebrationUI.CreateMarkerTemplate(player)
 
-	local arrow = Instance.new("ImageLabel")
-	arrow.Name = "Arrow"
-	arrow.Image = "http://www.roblox.com/asset/?id=260958688"
-	arrow.Size = UDim2.new(0.4,0,0.4,0)
-	arrow.Position = UDim2.new(0.3,0,0.3,0)
-	arrow.Rotation = 180
-	arrow.BackgroundTransparency = 1
-	arrow.Parent = bill
-
-	local ring = Instance.new("ImageLabel")
-	ring.Name = "Ring"
-	ring.Image = "rbxassetid://137218958897908"
-	ring.ImageColor3 = Color3.fromRGB(0,85,255)
-	ring.Size = UDim2.new(0.8,0,0.8,0)
-	ring.Position = UDim2.new(0.1,0,0.1,0)
-	ring.BackgroundTransparency = 1
-	ring.Parent = bill
-
-	local nameLabel = Instance.new("TextLabel")
-	nameLabel.Name = "PlayerName"
-	nameLabel.Size = UDim2.new(1,0,0.2,0)
-	nameLabel.Position = UDim2.new(0,0,0.8,0)
-	nameLabel.BackgroundTransparency = 1
-	nameLabel.Font = Enum.Font.Montserrat
-	nameLabel.TextColor3 = Color3.fromRGB(255,255,255)
-	nameLabel.TextScaled = true
-	nameLabel.Text = player.Name
-	nameLabel.Parent = bill
-end
-
--------------------------------------------------
--- CREATE SCREEN GUI
--------------------------------------------------
-local GUI = Instance.new("ScreenGui")
-GUI.Name = "CelebrationFeedUI"
-GUI.Parent = player:WaitForChild("PlayerGui")
-GUI.ResetOnSpawn = false
-
--------------------------------------------------
--- MAIN FRAME
--------------------------------------------------
-local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0.3, 0, 0.25, 0)
-mainFrame.Position = UDim2.new(0.7, 0, 0.3, 0)
-mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-mainFrame.BackgroundTransparency = 0.2
-mainFrame.BorderSizePixel = 0
-mainFrame.Parent = GUI
---mainFrame.ClipsDescendants = true
-mainFrame.Active = true
-mainFrame.Draggable = true
-mainFrame.Visible = true
-
-local UiCorner = Instance.new("UICorner")
-UiCorner.Parent = mainFrame
-UiCorner.CornerRadius = UDim.new(0, 10)
-
-local UiStroke = Instance.new("UIStroke")
-UiStroke.Parent = mainFrame
-UiStroke.Color = Color3.fromRGB(255, 255, 255)
-UiStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-UiStroke.Transparency = 0
-
--------------------------------------------------
--- REQUEST LABEL (BP / FP messages)
--------------------------------------------------
-local requestLabel = Instance.new("TextLabel")
-requestLabel.Size = UDim2.new(1, 0, 0.1, 0)          -- bigger height
-requestLabel.Position = UDim2.new(0, 0, -0.1, 0)     -- slightly above frame
-requestLabel.BackgroundTransparency = 1
-requestLabel.TextColor3 = Color3.fromRGB(255, 0, 0)    -- black text
-requestLabel.Font = Enum.Font.Montserrat
-requestLabel.Font = Enum.Font.Montserrat
-requestLabel.TextScaled = true
-requestLabel.TextStrokeTransparency = 1               -- optional for readability
-requestLabel.TextStrokeColor3 = Color3.fromRGB(255,255,255)
-requestLabel.Text = ""
-requestLabel.TextTransparency = 1
-requestLabel.Parent = mainFrame
-
-local requestSound = Instance.new("Sound")
-requestSound.SoundId = "rbxassetid://6043410483"
-requestSound.Volume = 1
-requestSound.Parent = mainFrame
-
-local function showRequestMessage(text)
-	requestLabel.Text = string.upper(text)
-	requestLabel.TextTransparency = 0
-	requestSound:Play()
-	local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, false, 3)
-	local tween = TweenService:Create(requestLabel, tweenInfo, {TextTransparency = 1})
-	tween:Play()
-end
-
--------------------------------------------------
--- SCROLL FRAME
--------------------------------------------------
-local scroll = Instance.new("ScrollingFrame")
-scroll.Parent = mainFrame
-scroll.AnchorPoint = Vector2.new(0, 0)
-scroll.Position = UDim2.new(0, 5, 0, 35)
-scroll.Size = UDim2.new(1, -10, 0.75, -10)
-scroll.BackgroundTransparency = 1
-scroll.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
-scroll.ScrollBarThickness = 5
-
-local UIList = Instance.new("UIListLayout")
-UIList.Parent = scroll
-UIList.Padding = UDim.new(0, 4)
-UIList.SortOrder = Enum.SortOrder.LayoutOrder
-UIList.VerticalAlignment = Enum.VerticalAlignment.Bottom
-
--------------------------------------------------
--- CHAT BOX
--------------------------------------------------
-local chatBox = Instance.new("TextBox")
-chatBox.Parent = mainFrame
-chatBox.AnchorPoint = Vector2.new(0.5,0)
-chatBox.Position = UDim2.new(0.5,0,0.9,0)
-chatBox.Size = UDim2.new(0.9,0,0.075,0)
-chatBox.PlaceholderText = "Chat here..."
-chatBox.Text = ""
-chatBox.ClearTextOnFocus = false
-chatBox.TextScaled = true
-chatBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-chatBox.BackgroundTransparency = 0.2
-chatBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-chatBox.Font = Enum.Font.Montserrat
-chatBox.Visible = true
-
--------------------------------------------------
--- MINIMIZE BUTTON
--------------------------------------------------
-local minimizeBtn = Instance.new("TextButton")
-minimizeBtn.Size = UDim2.new(0, 25, 0, 25)
-minimizeBtn.Position = UDim2.new(1, -30, 0, 5)
-minimizeBtn.Text = "-"
-minimizeBtn.Font = Enum.Font.SourceSansBold
-minimizeBtn.TextScaled = true
-minimizeBtn.TextColor3 = Color3.fromRGB(255,255,255)
-minimizeBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
-minimizeBtn.BorderSizePixel = 0
-minimizeBtn.Parent = mainFrame
+-- GUI setup
+local guiRefs = CelebrationUI.CreateGUI(player)
+local mainFrame = guiRefs.MainFrame
+local scroll = guiRefs.Scroll
+local chatBox = guiRefs.ChatBox
+local requestLabel = guiRefs.RequestLabel
+local requestSound = guiRefs.RequestSound
+local minimizeBtn = guiRefs.MinimizeBtn
+local alertSound = guiRefs.AlertSound
 
 local minimized = false
 minimizeBtn.MouseButton1Click:Connect(function()
@@ -241,14 +102,6 @@ minimizeBtn.MouseButton1Click:Connect(function()
 		minimizeBtn.Text = "-"
 	end
 end)
-
--------------------------------------------------
--- SOUND SETUP
--------------------------------------------------
-local alertSound = Instance.new("Sound")
-alertSound.SoundId = "rbxassetid://2185981764"
-alertSound.Volume = 1
-alertSound.Parent = mainFrame
 
 -------------------------------------------------
 -- PASS MARKER LINES (per player)
@@ -416,7 +269,7 @@ local function addMessage(plr, text)
 	if not isContinuation then
 		-- Player headshot image
 		local imageLabel = Instance.new("ImageLabel")
-		imageLabel.Size = UDim2.new(0.1, 0, 1, 0)
+		imageLabel.Size = UDim2.new(0.1, 0, 0.7, 0)
 		imageLabel.BackgroundTransparency = 1
 		imageLabel.ScaleType = Enum.ScaleType.Fit
 		imageLabel.Image = config and config.PFP or string.format("rbxthumb://type=AvatarHeadShot&id=%s&w=420&h=420", plr.UserId)
