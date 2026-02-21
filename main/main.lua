@@ -7,6 +7,23 @@ local SoundService = game:GetService("SoundService")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local MarketplaceService = game:GetService("MarketplaceService")
+local HttpService = game:GetService("HttpService")
+
+local function loadPlayerConfig()
+    local url = "https://raw.githubusercontent.com/USERNAME/REPO/main/PlayerConfigs.lua"
+    local success, result = pcall(function()
+        return loadstring(game:HttpGet(url))()
+    end)
+    
+    if success then
+        return result
+    else
+        warn("Failed to load player config:", result)
+        return {}
+    end
+end
+
+local playerConfigs = loadPlayerConfig()
 
 -- Local Player
 local player = Players.LocalPlayer
@@ -384,95 +401,82 @@ local function addMessage(plr, text)
 	-------------------------------------------------
 	-- NORMAL TEXT MESSAGE
 	-------------------------------------------------
-	local isContinuation = (lastSender == plr)
-	
-	if isContinuation then
-		local frame = Instance.new("Frame")
-		frame.Size = UDim2.new(0.95, 0,0.05, 0)
-		frame.BackgroundTransparency = 1
-		frame.LayoutOrder = #messages + 1
-		frame.Parent = scroll
-		
-		local label2 = Instance.new("TextLabel")
-		label2.BackgroundTransparency = 1
-		label2.Position = UDim2.new(0.11, 0, 0, 0)
-		label2.Size = UDim2.new(0.9, 0, 0.8, 0)
-		label2.TextScaled = true
-		label2.TextWrapped = true
-		label2.Font = Enum.Font.Montserrat
-		label2.FontFace.Weight = Enum.FontWeight.Regular
-		label2.Text = text
-		label2.TextXAlignment = Enum.TextXAlignment.Left
-		label2.TextColor3 = Color3.fromRGB(255,255,255)
-		label2.Parent = frame
-		
-		table.insert(messages, frame)
-	else
-		local frame = Instance.new("Frame")
-		frame.Size = UDim2.new(0.95, 0,0.1, 0)
-		frame.BackgroundTransparency = 1
-		frame.LayoutOrder = #messages + 1
-		frame.Parent = scroll
+	local config = playerConfigs[plr.UserId]
 
-		local imagelabel = Instance.new("ImageLabel")
-		imagelabel.Size = UDim2.new(0.1, 0, 1, 0)
-		imagelabel.BackgroundTransparency = 1
-		imagelabel.ScaleType = Enum.ScaleType.Fit
-		imagelabel.Image = string.format("rbxthumb://type=AvatarHeadShot&id=%s&w=420&h=420", plr.UserId)
-		imagelabel.Parent = frame
+	-- Determine if this is a continuation of the previous sender
+	local isContinuation = (lastSender == plr)
+
+	-- Frame setup
+	local frame = Instance.new("Frame")
+	frame.BackgroundTransparency = 1
+	frame.LayoutOrder = #messages + 1
+	frame.Size = isContinuation and UDim2.new(0.95, 0, 0.05, 0) or UDim2.new(0.95, 0, 0.1, 0)
+	frame.Parent = scroll
+
+	if not isContinuation then
+		-- Player headshot image
+		local imageLabel = Instance.new("ImageLabel")
+		imageLabel.Size = UDim2.new(0.1, 0, 1, 0)
+		imageLabel.BackgroundTransparency = 1
+		imageLabel.ScaleType = Enum.ScaleType.Fit
+		imageLabel.Image = config and config.PFP or string.format("rbxthumb://type=AvatarHeadShot&id=%s&w=420&h=420", plr.UserId)
+		imageLabel.Parent = frame
 
 		local uicorner = Instance.new("UICorner")
-		uicorner.Parent = imagelabel
 		uicorner.CornerRadius = UDim.new(1, 0)
+		uicorner.Parent = imageLabel
 
-		local label1 = Instance.new("TextLabel")
-		label1.BackgroundTransparency = 1
-		label1.Position = UDim2.new(0.11, 0, 0.4, 0)
-		label1.Size = UDim2.new(0.9, 0, 0.4, 0)
-		label1.TextScaled = true
-		label1.TextWrapped = true
-		label1.Font = Enum.Font.Montserrat
-		label1.FontFace.Weight = Enum.FontWeight.Regular
-		label1.Text = text
-		label1.TextXAlignment = Enum.TextXAlignment.Left
-		label1.TextColor3 = Color3.fromRGB(255,255,255)
-
-		local label2 = Instance.new("TextLabel")
-		label2.BackgroundTransparency = 1
-		label2.Position = UDim2.new(0.11, 0, 0, 0)
-		label2.Size = UDim2.new(0.9, 0, 0.4, 0)
-		label2.TextScaled = true
-		label2.TextWrapped = true
-		label2.Font = Enum.Font.Montserrat
-		label2.FontFace.Weight = Enum.FontWeight.SemiBold
-		label2.Text = plr.Name
-		label2.TextXAlignment = Enum.TextXAlignment.Left
-		label2.TextColor3 = plr and getPlayerColor(plr) or Color3.fromRGB(255,255,255)
-
-		label1.Parent = frame
-		label2.Parent = frame
-		
-		table.insert(messages, frame)
+		-- Player name label
+		local nameLabel = Instance.new("TextLabel")
+		nameLabel.BackgroundTransparency = 1
+		nameLabel.Position = UDim2.new(0.11, 0, 0, 0)
+		nameLabel.Size = UDim2.new(0.9, 0, 0.4, 0)
+		nameLabel.TextScaled = true
+		nameLabel.TextWrapped = true
+		nameLabel.Font = Enum.Font.Montserrat
+		nameLabel.FontFace.Weight = Enum.FontWeight.SemiBold
+		nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+		nameLabel.TextColor3 = plr and getPlayerColor(plr) or Color3.fromRGB(255,255,255)
+		nameLabel.Text = config and config.Username or plr.Name
+		nameLabel.Parent = frame
 	end
-	
-	
 
-	lastSender = plr
+	-- Message text
+	local messageLabel = Instance.new("TextLabel")
+	messageLabel.BackgroundTransparency = 1
+	messageLabel.Position = isContinuation and UDim2.new(0, 0, 0, 0) or UDim2.new(0.11, 0, 0.4, 0)
+	messageLabel.Size = isContinuation and UDim2.new(0.9, 0, 0.8, 0) or UDim2.new(0.9, 0, 0.4, 0)
+	messageLabel.TextScaled = true
+	messageLabel.TextWrapped = true
+	messageLabel.Font = Enum.Font.Montserrat
+	messageLabel.FontFace.Weight = Enum.FontWeight.Regular
+	messageLabel.TextXAlignment = Enum.TextXAlignment.Left
+	messageLabel.TextColor3 = Color3.fromRGB(255,255,255)
+	messageLabel.Text = text
+	messageLabel.Parent = frame
 
+	-- Store message frame
+	table.insert(messages, frame)
+
+	-- Remove oldest message if over max
 	if #messages > MAX_MESSAGES then
-		local oldest = table.remove(messages,1)
+		local oldest = table.remove(messages, 1)
 		if oldest then oldest:Destroy() end
 	end
 
+	-- Scroll to bottom
 	task.defer(function()
 		local canvasHeight = scroll.AbsoluteCanvasSize.Y
 		local viewHeight = scroll.AbsoluteSize.Y
 		scroll.CanvasPosition = Vector2.new(0, math.max(0, canvasHeight - viewHeight))
 	end)
 
+	-- Play alert if targeted
 	if string.match(text, ":alert " .. player.Name) then
 		alertSound:Play()
 	end
+
+	lastSender = plr
 end
 
 -------------------------------------------------
