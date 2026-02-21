@@ -117,7 +117,7 @@ function CelebrationUI.CreateGUI(player)
     scroll.BackgroundTransparency = 1
     scroll.ScrollBarImageColor3 = Color3.fromRGB(255,255,255)
     scroll.ScrollBarThickness = 5
-    minimizeBtn.BorderSizePixel = 1
+    scroll.BorderSizePixel = 1
 
     local uiList = Instance.new("UIListLayout")
     uiList.Parent = scroll
