@@ -444,7 +444,7 @@ local function addMessage(plr, text)
 	-- Message text
 	local messageLabel = Instance.new("TextLabel")
 	messageLabel.BackgroundTransparency = 1
-	messageLabel.Position = isContinuation and UDim2.new(0, 0, 0, 0) or UDim2.new(0.11, 0, 0.4, 0)
+	messageLabel.Position = isContinuation and UDim2.new(0.11, 0, 0, 0) or UDim2.new(0.11, 0, 0.4, 0)
 	messageLabel.Size = isContinuation and UDim2.new(0.9, 0, 0.8, 0) or UDim2.new(0.9, 0, 0.4, 0)
 	messageLabel.TextScaled = true
 	messageLabel.TextWrapped = true
