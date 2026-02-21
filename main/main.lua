@@ -10,7 +10,7 @@ local MarketplaceService = game:GetService("MarketplaceService")
 local HttpService = game:GetService("HttpService")
 
 local function loadPlayerConfig()
-    local url = "https://raw.githubusercontent.com/USERNAME/REPO/main/PlayerConfigs.lua"
+    local url = "https://raw.githubusercontent.com/SwaggasDeCatas/customchat/refs/heads/main/main/PlayerConfigs.lua"
     local success, result = pcall(function()
         return loadstring(game:HttpGet(url))()
     end)
