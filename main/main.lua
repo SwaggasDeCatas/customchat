@@ -181,9 +181,7 @@ local function addMessage(plr, text)
 		return
 	end
 
-	-------------------------------------------------
-	-- BP / FP REQUESTS
-	-------------------------------------------------
+
 -------------------------------------------------
 -- REQUEST LABEL (BP / FP messages)
 -------------------------------------------------
@@ -214,6 +212,9 @@ local function showRequestMessage(text)
 	local tween = TweenService:Create(requestLabel, tweenInfo, {TextTransparency = 1})
 	tween:Play()
 end
+		-------------------------------------------------
+	-- BP / FP REQUESTS
+	-------------------------------------------------
 	
 	if text == ":bp" then
 				print("test")
