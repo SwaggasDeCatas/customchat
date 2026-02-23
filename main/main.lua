@@ -184,8 +184,11 @@ local function addMessage(plr, text)
 	-------------------------------------------------
 	-- BP / FP REQUESTS
 	-------------------------------------------------
+
+	
 	if text == ":bp" then
 		showRequestMessage(plr.Name .. " requested back post")
+		print("test")
 		return
 	end
 
