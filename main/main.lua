@@ -156,10 +156,34 @@ end
 -- ADD MESSAGE FUNCTION
 -------------------------------------------------
 local lastSender = nil
+-------------------------------------------------
+-- EMOJI DICTIONARY (add something to this to add an emoji and allat)
+-------------------------------------------------
+local emojiMap = {
+	[":flushed:"] = "😳",
+	[":sob:"] = "😭",
+	[":skull:"] = "💀",
+	[":fire:"] = "🔥",
+	[":100:"] = "💯",
+	[":eyes:"] = "👀",
+	[":laughing:"] = "😂",
+	[":angry:"] = "😡",
+	[":cold:"] = "🥶",
+	[":heart:"] = "❤️",
+	[":sunglasses:"] = "😎",
+	[":joy:"] = "😂",
+}
+
+local function replaceEmojis(text)
+	for code, emoji in pairs(emojiMap) do
+		text = string.gsub(text, code, emoji)
+	end
+	return text
+end
 
 local function addMessage(plr, text)
 	if not active then return end
-
+text = replaceEmojis(text)
 	-------------------------------------------------
 	-- PASS MARKER
 	-------------------------------------------------
