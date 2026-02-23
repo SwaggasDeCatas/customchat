@@ -180,4 +180,36 @@ function CelebrationUI.CreateGUI(player)
     }
 end
 
+-------------------------------------------------
+-- REQUEST LABEL (BP / FP messages)
+-------------------------------------------------
+local requestLabel = Instance.new("TextLabel")
+requestLabel.Size = UDim2.new(1, 0, 0.1, 0)          -- bigger height
+requestLabel.Position = UDim2.new(0, 0, -0.1, 0)     -- slightly above frame
+requestLabel.BackgroundTransparency = 1
+requestLabel.TextColor3 = Color3.fromRGB(255, 0, 0)    -- black text
+requestLabel.Font = Enum.Font.Montserrat
+requestLabel.Font = Enum.Font.Montserrat
+requestLabel.TextScaled = true
+requestLabel.TextStrokeTransparency = 1               -- optional for readability
+requestLabel.TextStrokeColor3 = Color3.fromRGB(255,255,255)
+requestLabel.Text = ""
+requestLabel.TextTransparency = 1
+requestLabel.Parent = mainFrame
+
+local requestSound = Instance.new("Sound")
+requestSound.SoundId = "rbxassetid://6043410483"
+requestSound.Volume = 1
+requestSound.Parent = mainFrame
+
+local function showRequestMessage(text)
+	requestLabel.Text = string.upper(text)
+	requestLabel.TextTransparency = 0
+	requestSound:Play()
+	local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, false, 3)
+	local tween = TweenService:Create(requestLabel, tweenInfo, {TextTransparency = 1})
+	tween:Play()
+end
+
+
 return CelebrationUI
