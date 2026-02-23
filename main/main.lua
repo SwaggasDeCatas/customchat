@@ -217,7 +217,6 @@ end
 	-------------------------------------------------
 	
 	if text == ":bp" then
-				print("test")
 		showRequestMessage(plr.Name .. " requested back post")
 		return
 	end
