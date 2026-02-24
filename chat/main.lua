@@ -10,7 +10,7 @@ local MarketplaceService = game:GetService("MarketplaceService")
 local HttpService = game:GetService("HttpService")
 
 local function loadPlayerConfig()
-	local url = "https://raw.githubusercontent.com/SwaggasDeCatas/customchat/refs/heads/main/main/PlayerConfigs.lua"
+	local url = "https://raw.githubusercontent.com/SwaggasDeCatas/customchat/refs/heads/main/chat/PlayerConfigs.lua"
 	local success, result = pcall(function()
 		return loadstring(game:HttpGet(url))()
 	end)
@@ -56,7 +56,7 @@ end
 -- CELEBRATION FOLDER & MARKER TEMPLATE
 -------------------------------------------------
 local function loadCelebrationUI()
-	local url = "https://raw.githubusercontent.com/SwaggasDeCatas/customchat/refs/heads/main/main/UI.lua"
+	local url = "https://raw.githubusercontent.com/SwaggasDeCatas/customchat/refs/heads/main/chat/UI.lua"
 	local success, module = pcall(function()
 		return loadstring(game:HttpGet(url))()
 	end)
