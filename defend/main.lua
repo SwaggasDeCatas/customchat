@@ -27,11 +27,14 @@ local AUTO_DEFENSE_DISTANCE = 12
 local DEFENSIVE_BEHIND = 5
 local ANGLE_OFFSET = 0.3
 local SPEED_BOOST = 24
-local NORMAL_SPEED = 16
+local NORMAL_SPEED = 19
 local HALF_LINE_Z = 0
 
 local TACKLE_DISTANCE = 6
 local TACKLE_COOLDOWN = 3
+
+local SAFE_PASS_RADIUS = 10
+local isPoweringUp = false
 
 local lastTackleTime = 0
 local canPassTime = 0
@@ -49,6 +52,14 @@ local SlideTrack = humanoid:LoadAnimation(SlideAnim)
 local ChestAnim = Instance.new("Animation")
 ChestAnim.AnimationId = "rbxassetid://17824583639"
 local ChestTrack = humanoid:LoadAnimation(ChestAnim)
+
+local PassHold = Instance.new("Animation")
+PassHold.AnimationId = "rbxassetid://17883974151"
+local PassHoldTrack = humanoid:LoadAnimation(PassHold)
+
+local PassRelease = Instance.new("Animation")
+PassRelease.AnimationId = "rbxassetid://17883975642"
+local PassReleaseTrack = humanoid:LoadAnimation(PassRelease)
 
 --// GOALS
 local AWAY_GOAL_POS = Vector3.new(2,5.32,349)
@@ -100,15 +111,29 @@ local function passToPlayer(targetPlayer)
 		MainFunction:InvokeServer("Ownership", Ball, Ball.Position, 100, 10, nil)
 	end
 
-	local targetHRP = targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")
-	if not targetHRP then return end
+    local targetHRP = targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not targetHRP then return end
+    targetHRP = targetHRP.Position + Vector3.new(0, 100, 0)
 
-	local duration = 1.7
-	local bv = Instance.new("BodyVelocity")
-	bv.MaxForce = Vector3.new(1e5,1e5,1e5)
-	bv.Velocity = (targetHRP.Position - Ball.Position) / duration
-	bv.Parent = Ball
-	Debris:AddItem(bv,0.4)
+    local duration = 1.7
+
+    -- Kick the ball
+    local bv = Instance.new("BodyVelocity")
+    bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+    bv.Velocity = (targetHRP - Ball.Position) / duration
+    bv.Parent = Ball
+    Debris:AddItem(bv, 0.4)
+
+    -- Sound logic (unchanged)
+    local Kick = Ball:WaitForChild("Kick")
+    local power = (bv.Velocity.Magnitude / 200) ^ 1.1 - 0.075
+    if power < 0.15 then power = 0.15 end
+    local pitch = bv.Velocity.Magnitude / 150 + 1
+
+    Kick.Volume = power
+    Kick.PlaybackSpeed = pitch
+    Kick:Play()
+    MainEvent:FireServer("Sound", Ball, Kick, power, pitch, false)
 end
 
 local function getBestForward()
@@ -180,10 +205,6 @@ local function attemptTackle()
 
 	cd = true
 
-	local ballY = Ball.Position.Y
-	local chestY = char:FindFirstChild("UpperTorso") and char.UpperTorso.Position.Y or char.Torso.Position.Y
-	local heightDiff = ballY - chestY
-
 	for _,v in ipairs(Ball:GetChildren()) do
 		if v:IsA("BodyVelocity") or v:IsA("VectorForce") then
 			v:Destroy()
@@ -191,6 +212,10 @@ local function attemptTackle()
 	end
 
 	MainFunction:InvokeServer("Ownership", Ball, Ball.Position, 100, 10, 1)
+
+	local ballY = Ball.Position.Y
+	local chestY = char:FindFirstChild("UpperTorso") and char.UpperTorso.Position.Y or char.Torso.Position.Y
+	local heightDiff = ballY - chestY
 
 	if heightDiff > 0.5 and heightDiff < 7.5 then
 		
@@ -217,13 +242,26 @@ local function attemptTackle()
 		Debris:AddItem(bv,0.3)
 	end
 
-	lastTackleTime = tick()
-canPassTime = tick() + 3
-hasPassed = false
+	task.wait(1)
 
-task.delay(TACKLE_COOLDOWN,function()
-	cd=false
-end)
+	PassHoldTrack:Play(nil, nil, 1.11)
+	isPoweringUp = true
+	lastTackleTime = tick()
+	canPassTime = tick() + 1.5
+	hasPassed = false
+
+	task.delay(TACKLE_COOLDOWN,function()
+
+		-- If cooldown ends and we never passed → release but don't pass
+		if isPoweringUp and not hasPassed then
+			PassHoldTrack:Stop()
+			PassReleaseTrack:Play(0,1,1)
+			PassReleaseTrack:AdjustWeight(1,0)
+		end
+
+		isPoweringUp = false
+		cd=false
+	end)
 end
 
 --====================================================
@@ -235,57 +273,99 @@ RunService.Heartbeat:Connect(function()
 	if STOP_SCRIPT then return end
 	if not Ball then return end
 
-	humanoid.WalkSpeed=SPEED_BOOST
+	humanoid.WalkSpeed = SPEED_BOOST
 
 	local attackers, defenders = playersNearBall(DANGER_RADIUS)
-	for i,v in ipairs(defenders) do if v==player then table.remove(defenders,i) break end end
-	local numAttackers=#attackers
-	local numDefenders=#defenders+1
+	for i,v in ipairs(defenders) do 
+		if v==player then 
+			table.remove(defenders,i) 
+			break 
+		end 
+	end
 
-	local hasBall = Ball.Owner.Value==player
+	local numAttackers = #attackers
+	local numDefenders = #defenders + 1
+
+	local owner = Ball.Owner.Value
+	local hasBall = owner == player
 	local distToBall = (Ball.Position - hrp.Position).Magnitude
 
-	-- If gained ball → pass immediately
-if hasBall then
-	
-	-- Always keep moving toward ball
-	humanoid:MoveTo(Ball.Position)
+	--====================================================
+	-- IF TEAMMATE HAS BALL → RETREAT TO HALF
+	--====================================================
+	if owner and owner:IsA("Player") and owner.Team == player.Team and owner ~= player then
+		
+		local retreatZ = HALF_LINE_Z
+		local retreatPos = Vector3.new(hrp.Position.X, hrp.Position.Y, retreatZ)
 
-	-- Only allow pass after 3 seconds from tackle
-	if tick() >= canPassTime and not hasPassed then
-		
-		local distToBall = (Ball.Position - hrp.Position).Magnitude
-		
-		-- Make sure still close to ball
-		if distToBall <= TACKLE_DISTANCE then
-			
-			local forward = getBestForward()
-			if forward then
-				hasPassed = true
-				humanoid:Move(Vector3.zero)
-				passToPlayer(forward)
-			end
-			
-		end
+		humanoid:MoveTo(retreatPos)
+		return
 	end
-	
-	return
-end
-	-- Always move toward ball when engaging
+
+	--====================================================
+	-- IF WE HAVE BALL
+	--====================================================
+	if hasBall then
+		
+		humanoid:MoveTo(Ball.Position)
+
+		-- If ownership changed while powering → release but don't pass
+		if isPoweringUp and Ball.Owner.Value ~= player then
+			PassHoldTrack:Stop()
+			PassReleaseTrack:Play(0,1,1)
+			isPoweringUp = false
+			return
+		end
+
+		-- Only allow pass after delay
+		if tick() >= canPassTime and not hasPassed then
+			
+			if distToBall <= TACKLE_DISTANCE then
+
+				-- Check if safe to pass (no one close)
+				local someoneClose = false
+				for _, plr in ipairs(Players:GetPlayers()) do
+					if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+						local d = (plr.Character.HumanoidRootPart.Position - Ball.Position).Magnitude
+						if d <= SAFE_PASS_RADIUS and plr ~= player then
+							someoneClose = true
+							break
+						end
+					end
+				end
+
+				if not someoneClose then
+					local forward = getBestForward()
+					if forward then
+						hasPassed = true
+						isPoweringUp = false
+						humanoid:Move(Vector3.zero)
+						PassHoldTrack:Stop()
+						PassReleaseTrack:Play(0,1,1)
+						PassReleaseTrack:AdjustWeight(1,0)
+						passToPlayer(forward)
+					end
+				end
+			end
+		end
+
+		return
+	end
+
+	--====================================================
+	-- NORMAL DEFENSIVE BEHAVIOR
+	--====================================================
 	humanoid:MoveTo(Ball.Position)
 
-	-- Attempt tackle
 	if distToBall <= TACKLE_DISTANCE then
 		attemptTackle()
 	end
 
-	-- 1v1
 	if numAttackers==1 and numDefenders==1 then
 		local attHRP=attackers[1].Character.HumanoidRootPart
 		humanoid:MoveTo(defensivePosition(attHRP))
 	end
 
-	-- 2v1
 	if numAttackers==2 and numDefenders==1 then
 		local att1=attackers[1].Character.HumanoidRootPart
 		local att2=attackers[2].Character.HumanoidRootPart
