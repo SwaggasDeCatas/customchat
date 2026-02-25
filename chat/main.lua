@@ -535,7 +535,7 @@ table.insert(playerConnections, UserInputService.InputBegan:Connect(function(inp
 		return
 	end
 
-	if input.KeyCode == Enum.KeyCode.Q then
+	if input.KeyCode == Enum.KeyCode.G then
 		local char = player.Character
 		if char and char:FindFirstChild("Pass") and canMark then
 			canMark = false
