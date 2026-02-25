@@ -419,8 +419,15 @@ end
 -------------------------------------------------
 -- SEND CHAT FUNCTION
 -------------------------------------------------
-local function sendChat()
-	if not active or chatBox.Text == "" then return end
+local function sendChat(enterPressed)
+	if not active then return end
+	if not chatBox.Text or chatBox.Text == "" then return end
+
+	-- Only send if Enter was pressed OR focus manually lost while typing
+	if enterPressed == false and typing then
+		return
+	end
+
 	local msg = chatBox.Text
 	local dataEvent = ReplicatedStorage:WaitForChild("Event"):WaitForChild("Data")
 	local tackleCelebration = player.Data.Keybinds.Tackle.Celebration
@@ -480,26 +487,33 @@ end))
 -------------------------------------------------
 -- TOGGLE TYPING MODE (Right Alt)
 -------------------------------------------------
-local ignoreNextInput = false
-UserInputService.InputBegan:Connect(function(input, gp)
+local rightAltConn = UserInputService.InputBegan:Connect(function(input, gp)
 	if gp then return end
+
 	if input.KeyCode == Enum.KeyCode.RightAlt then
-		if not typing then
-			typing = true
+		if chatBox:IsFocused() then
+			chatBox:ReleaseFocus()
+		else
 			mainFrame.Visible = true
 			chatBox:CaptureFocus()
-			ignoreNextInput = true
-		else
-			typing = false
-			chatBox:ReleaseFocus()
 		end
 	end
 end)
-UserInputService.InputChanged:Connect(function(input)
-	if ignoreNextInput and input.UserInputType == Enum.UserInputType.Keyboard then
-		ignoreNextInput = false
-	end
+table.insert(playerConnections, rightAltConn)
+
+-------------------------------------------------
+-- CHATBOX FOCUS TRACKING
+-------------------------------------------------
+local focusedConn = chatBox.Focused:Connect(function()
+	typing = true
 end)
+table.insert(playerConnections, focusedConn)
+
+local focusLostConn = chatBox.FocusLost:Connect(function(enterPressed)
+	typing = false
+	sendChat(enterPressed)
+end)
+table.insert(playerConnections, focusLostConn)
 
 -------------------------------------------------
 -- MARKERS & PASS DEBOUNCE
