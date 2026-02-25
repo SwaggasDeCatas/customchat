@@ -474,16 +474,6 @@ table.insert(playerConnections, Players.PlayerAdded:Connect(function(plr)
 	table.insert(playerConnections, teamChangeConn)
 end))
 
-table.insert(playerConnections, player:GetPropertyChangedSignal("Team"):Connect(function()
-	for _, conn in ipairs(playerConnections) do
-		pcall(function() conn:Disconnect() end)
-	end
-	playerConnections = {}
-	for _, msg in ipairs(messages) do msg:Destroy() end
-	messages = {}
-	setupTeamTracking()
-end))
-
 -------------------------------------------------
 -- TOGGLE TYPING MODE (Right Alt)
 -------------------------------------------------
@@ -553,43 +543,3 @@ table.insert(playerConnections, UserInputService.InputBegan:Connect(function(inp
 		end
 	end
 end))
-
--------------------------------------------------
--- CHARACTER RESPAWN HANDLING (FIX)
--------------------------------------------------
-
-local function reinitialize()
-	-- Wait for new character
-	local newChar = player.Character or player.CharacterAdded:Wait()
-
-	-- Wait for Data to exist again
-	repeat task.wait() until player:FindFirstChild("Data")
-	repeat task.wait() until player.Data:FindFirstChild("Keybinds")
-	repeat task.wait() until player.Data.Keybinds:FindFirstChild("Tackle")
-	repeat task.wait() until player.Data.Keybinds.Tackle:FindFirstChild("Celebration")
-
-	-- Clear old connections safely
-	for _, conn in ipairs(playerConnections) do
-		pcall(function()
-			conn:Disconnect()
-		end)
-	end
-	playerConnections = {}
-
-	-- Clear old messages
-	for _, msg in ipairs(messages) do
-		if msg then msg:Destroy() end
-	end
-	messages = {}
-	lastSender = nil
-
-	-- Re-track team players
-	setupTeamTracking()
-
-	print("Chat system reinitialized after respawn.")
-end
-
-player.CharacterAdded:Connect(function()
-	task.wait(1) -- small delay for replication safety
-	reinitialize()
-end)
