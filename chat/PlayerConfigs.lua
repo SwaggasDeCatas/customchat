@@ -1,6 +1,6 @@
 -- PlayerConfigs.lua
 return {
-    [7295784691] = { -- Roblox UserId
+    [1818390] = { -- Roblox UserId
         Username = "flyest",
         PFP = "rbxassetid://109056094023015"
     },
