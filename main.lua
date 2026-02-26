@@ -8127,23 +8127,6 @@ function Library:CreateWindow(WindowInfo)
     Library:GiveSignal(UserInputService.WindowFocusReleased:Connect(function()
         Library.IsRobloxFocused = false
     end))
-
-    function Window:Destroy()
-	if Destroyed then return end
-	Destroyed = true
-	
-	if ToggleConnection then
-		ToggleConnection:Disconnect()
-		ToggleConnection = nil
-	end
-	
-	if Library.KeybindFrame then
-		Library.KeybindFrame:Destroy()
-	end
-	
-	if MainFrame then
-		MainFrame:Destroy()
-	end
 	
 	Library.ActiveTab = nil
 end
