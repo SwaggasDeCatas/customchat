@@ -8127,9 +8127,6 @@ function Library:CreateWindow(WindowInfo)
     Library:GiveSignal(UserInputService.WindowFocusReleased:Connect(function()
         Library.IsRobloxFocused = false
     end))
-	
-	Library.ActiveTab = nil
-end
 
     return Window
 end
