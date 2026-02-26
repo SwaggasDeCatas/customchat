@@ -6507,6 +6507,7 @@ function Library:CreateWindow(WindowInfo)
         local TabContainer
         local TabLeft
         local TabRight
+        local TabMiddle
 
         Icon = Library:GetCustomIcon(Icon)
         do
@@ -6564,6 +6565,39 @@ function Library:CreateWindow(WindowInfo)
                 Visible = false,
                 Parent = Container,
             })
+
+            TabMiddle = New("ScrollingFrame", {
+                AutomaticCanvasSize = Enum.AutomaticSize.Y,
+                BackgroundTransparency = 1,
+                CanvasSize = UDim2.fromScale(0, 0),
+                ScrollBarImageTransparency = 1,
+                ScrollBarThickness = 0,
+                Size = UDim2.new(1, -3, 1, 0),
+                Parent = TabContainer,
+            })
+            New("UIListLayout", {
+                Padding = UDim.new(0, 2),
+                Parent = TabMiddle,
+            })
+            New("UIPadding", {
+                PaddingBottom = UDim.new(0, 2),
+                PaddingLeft = UDim.new(0, 2),
+                PaddingRight = UDim.new(0, 2),
+                PaddingTop = UDim.new(0, 2),
+                Parent = TabMiddle,
+            })
+            do
+                New("Frame", {
+                    BackgroundTransparency = 1,
+                    LayoutOrder = -1,
+                    Parent = TabMiddle,
+                })
+                New("Frame", {
+                    BackgroundTransparency = 1,
+                    LayoutOrder = 1,
+                    Parent = TabMiddle,
+                })
+            end
 
             TabLeft = New("ScrollingFrame", {
                 AutomaticCanvasSize = Enum.AutomaticSize.Y,
@@ -6726,6 +6760,7 @@ function Library:CreateWindow(WindowInfo)
             Sides = {
                 TabLeft,
                 TabRight,
+                TabMiddle,
             },
             WarningBox = {
                 IsNormal = false,
@@ -6846,7 +6881,11 @@ function Library:CreateWindow(WindowInfo)
                 AutomaticSize = Enum.AutomaticSize.Y,
                 BackgroundTransparency = 1,
                 Size = UDim2.fromScale(1, 0),
-                Parent = Info.Side == 1 and TabLeft or TabRight,
+                Parent =
+                Info.Side == 1 and TabLeft
+                or Info.Side == 2 and TabRight
+                or Info.Side == 3 and TabMiddle
+                or TabLeft,
             })
             New("UIListLayout", {
                 Padding = UDim.new(0, 6),
@@ -6957,6 +6996,10 @@ function Library:CreateWindow(WindowInfo)
 
         function Tab:AddRightGroupbox(Name, IconName)
             return Tab:AddGroupbox({ Side = 2, Name = Name, IconName = IconName })
+        end
+
+        function Tab:AddMiddleGroupbox(Name, IconName)
+            return Tab:AddGroupbox({ Side = 3, Name = Name, IconName = IconName })
         end
 
         function Tab:AddTabbox(Info)
