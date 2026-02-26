@@ -3244,6 +3244,128 @@ do
         return Label
     end
 
+    function Funcs:MakeChatFrame(...)
+    local Data = {}
+
+    local First = select(1, ...)
+    local Second = select(2, ...)
+
+    if typeof(First) == "table" then
+        Data.Text = First.Text or ""
+        Data.Player = First.Player
+        Data.PFP = First.PFP
+        Data.Visible = First.Visible ~= false
+    else
+        Data.Text = First or ""
+        Data.Player = Second
+        Data.PFP = select(3, ...)
+        Data.Visible = true
+    end
+
+    local Groupbox = self
+    local Container = Groupbox.Container
+
+    local ChatFrameObject = {
+        Text = Data.Text,
+        Player = Data.Player,
+        PFP = Data.PFP,
+        Visible = Data.Visible,
+        Type = "ChatFrame",
+    }
+
+    --// Main Holder Frame
+    local Holder = New("Frame", {
+        Size = UDim2.new(1, 0, 0, 38),
+        BackgroundTransparency = 1,
+        Visible = ChatFrameObject.Visible,
+        Parent = Container,
+    })
+
+    --// Profile Image
+    local ProfileImage = New("ImageLabel", {
+        Size = UDim2.new(0.075, 0, 1, 0),
+        BackgroundTransparency = 1,
+        ScaleType = Enum.ScaleType.Fit,
+        Parent = Holder,
+    })
+
+    -- Use provided PFP or fallback to player thumbnail
+    if ChatFrameObject.PFP then
+        ProfileImage.Image = ChatFrameObject.PFP
+    elseif ChatFrameObject.Player then
+        ProfileImage.Image =
+            "rbxthumb://type=AvatarHeadShot&id=" .. ChatFrameObject.Player.UserId .. "&w=150&h=150"
+    end
+
+    New("UICorner", {
+        CornerRadius = UDim.new(1, 0),
+        Parent = ProfileImage,
+    })
+
+    --// Username Label
+    local NameLabel = New("TextLabel", {
+        BackgroundTransparency = 1,
+        Size = UDim2.new(0.9, 0, 0.4, 0),
+        Position = UDim2.new(0.1, 0, 0, 0),
+        Font = Enum.Font.Montserrat,
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        TextScaled = true,
+        TextWrapped = true,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Text = ChatFrameObject.Player and ChatFrameObject.Player.Name or "Unknown",
+        Parent = Holder,
+    })
+
+    -- Simulate SemiBold (Roblox doesn't have direct weight toggle for Enum.Font)
+    NameLabel.FontFace = Font.new(
+        "rbxasset://fonts/families/Montserrat.json",
+        Enum.FontWeight.SemiBold,
+        Enum.FontStyle.Normal
+    )
+
+    --// Message Label
+    local MessageLabel = New("TextLabel", {
+        BackgroundTransparency = 1,
+        Size = UDim2.new(0.9, 0, 0.4, 0),
+        Position = UDim2.new(0.1, 0, 0.5, 0),
+        Font = Enum.Font.Montserrat,
+        TextColor3 = Color3.fromRGB(200, 200, 200),
+        TextScaled = true,
+        TextWrapped = true,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Text = ChatFrameObject.Text,
+        Parent = Holder,
+    })
+
+    MessageLabel.FontFace = Font.new(
+        "rbxasset://fonts/families/Montserrat.json",
+        Enum.FontWeight.SemiBold,
+        Enum.FontStyle.Normal
+    )
+
+    function ChatFrameObject:SetVisible(state: boolean)
+        ChatFrameObject.Visible = state
+        Holder.Visible = state
+        Groupbox:Resize()
+    end
+
+    function ChatFrameObject:SetText(newText: string)
+        ChatFrameObject.Text = newText
+        MessageLabel.Text = newText
+    end
+
+    ChatFrameObject.Holder = Holder
+    ChatFrameObject.NameLabel = NameLabel
+    ChatFrameObject.MessageLabel = MessageLabel
+    ChatFrameObject.ProfileImage = ProfileImage
+
+    table.insert(Groupbox.Elements, ChatFrameObject)
+
+    Groupbox:Resize()
+
+    return ChatFrameObject
+end
+
     function Funcs:AddButton(...)
         local function GetInfo(...)
             local Info = {}
@@ -6845,9 +6967,15 @@ function Library:CreateWindow(WindowInfo)
 
         function Tab:RefreshSides()
             local Offset = WarningBoxHolder.Visible and WarningBox.Size.Y.Offset + 8 or 0
+
             for _, Side in Tab.Sides do
                 Side.Position = UDim2.new(Side.Position.X.Scale, 0, 0, Offset)
-                Side.Size = UDim2.new(0.5, -3, 1, -Offset)
+
+                if Side == TabMiddle then
+                    Side.Size = UDim2.new(1, 0, 1, -Offset) -- FULL WIDTH
+                else
+                    Side.Size = UDim2.new(0.5, -3, 1, -Offset) -- HALF WIDTH
+                end
             end
         end
 
